@@ -1,20 +1,27 @@
-from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from invoices.serializers import InvoiceSerializer
-from invoices.repository import InvoiceRepository
-from invoices.models import Invoice
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-class InvoicesView(APIView):
+from api import settings
+from invoices.models import Invoice
+from invoices.repository import InvoiceRepository
+from invoices.serializers import InvoiceSerializer
+
+
+class InvoicesView(APIView, LimitOffsetPagination):
     """
     Invoices API View
     """
     repository = InvoiceRepository()
 
-    def get(self, request):
-        # retrieve items
-        return Response([])
+    def get(self, request, format=None):
+
+        items = Invoice.objects.all()
+
+        results = self.paginate_queryset(items, request)
+        serializer = InvoiceSerializer(results, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
         serializer = InvoiceSerializer(data=request.data)
@@ -41,4 +48,3 @@ class InvoicesView(APIView):
                 return Response(resp, status=status.HTTP_204_NO_CONTENT)
             return Response(str(resp), status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
