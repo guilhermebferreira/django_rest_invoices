@@ -31,19 +31,7 @@ class InvoicesView(APIView, LimitOffsetPagination):
             order_by = self.get_order_by(request)
             filter_by = self.get_filter_by(request)
 
-            query_select = 'SELECT * FROM invoices_invoice'
-            query_order = ''
-            query_where = ''
-            if order_by:
-                order_by = ', '.join(order_by)
-                query_order = ' ORDER BY ' + order_by
-            if filter_by:
-                filter_by = ' AND '.join(filter_by)
-                query_where = ' WHERE ' + filter_by
-
-            query = query_select + query_where + query_order
-
-            items = Invoice.objects.raw(query)
+            items = self.get_items(order_by, filter_by)
 
             results = self.paginate_queryset(items, request)
 
@@ -51,6 +39,22 @@ class InvoicesView(APIView, LimitOffsetPagination):
             return self.get_paginated_response(serializer.data)
         except Exception as ex:
             return Response(ex, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_items(self, order_by, filter_by):
+        query_select = 'SELECT * FROM invoices_invoice'
+        query_order = ''
+        query_where = ''
+        if order_by:
+            order_by = ', '.join(order_by)
+            query_order = ' ORDER BY ' + order_by
+        if filter_by:
+            filter_by = ' AND '.join(filter_by)
+            query_where = ' WHERE ' + filter_by
+
+        query = query_select + query_where + query_order
+
+        items = Invoice.objects.raw(query)
+        return items
 
     def get_order_by(self, request):
         order_by_params = self.request.query_params.get('order_by', '')
