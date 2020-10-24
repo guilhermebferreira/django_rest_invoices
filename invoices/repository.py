@@ -1,6 +1,6 @@
 from django.db import connection
 
-from .models import Invoice
+from invoices.models import Invoice
 
 
 class InvoiceRepository:
@@ -46,13 +46,6 @@ class InvoiceRepository:
             print(str(ex))
             return ex, False
 
-    def delete(self):
-        pass
-
-    def list(self):
-        list = Invoice.objects.raw('SELECT * FROM invoice')
-
-        return list
 
     def __dictfetchall(self, cursor):
         "Returns all rows from a cursor as a dict"
@@ -66,4 +59,4 @@ class InvoiceRepository:
         "Returns all rows from a cursor as a dict"
         desc = cursor.description
         row = cursor.fetchone()
-        return  dict(zip([col[0] for col in desc], row))
+        return dict(zip([col[0] for col in desc], row))
