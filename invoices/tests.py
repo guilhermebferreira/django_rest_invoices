@@ -1,13 +1,8 @@
-# from django.test import TestCase
 import unittest
 import mock
 
 from rest_framework.authtoken.admin import User
 from rest_framework.test import APIClient
-
-
-def mock_test(*args, **kwargs):
-    return 200
 
 
 def mock_create_invoice(self, data):
@@ -16,6 +11,7 @@ def mock_create_invoice(self, data):
 
 
 class InvoicesTestCase(unittest.TestCase):
+    fixtures = ["invoices/fixtures/invoices.json"]
 
     def setUp(self):
         user = User(username='test', email='user@test.com', password='test@testUser')
@@ -25,6 +21,8 @@ class InvoicesTestCase(unittest.TestCase):
     def test_get(self):
         response = self.client.get('/api/invoices/')
         self.assertEqual(response.status_code, 200)
+
+
 
     @mock.patch('invoices.repository.InvoiceRepository.create', mock_create_invoice)
     def test_create(self):
