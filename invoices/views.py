@@ -8,11 +8,16 @@ from invoices.models import Invoice
 from invoices.repository import InvoiceRepository
 from invoices.serializers import InvoiceSerializer
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class InvoicesView(APIView, LimitOffsetPagination):
     """
     Invoices API View
     """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     repository = InvoiceRepository()
     ordering_by = ['reference_month', 'reference_year', 'document']
     filter_by = [
