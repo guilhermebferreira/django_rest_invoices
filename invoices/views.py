@@ -9,6 +9,7 @@ class InvoicesView(APIView):
     """
     Invoices API View
     """
+    repository = InvoiceRepository()
 
     def get(self, request):
         # retrieve items
@@ -18,7 +19,11 @@ class InvoicesView(APIView):
         serializer = InvoiceSerializer(data=request.data)
 
         if serializer.is_valid():
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            resp, ok = self.repository.create(serializer.data)
+            if ok:
+                return Response(resp, status=status.HTTP_201_CREATED)
+
+            return Response(str(resp), status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
