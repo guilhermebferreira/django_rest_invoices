@@ -1,9 +1,35 @@
 # Invoices REST API
 
+Rest api developed using Django Rest Framework, 
+with mysql database and unit tests with mocked methods 
+to avoid manipulating on database while running the tests
+
+## Database
+
+To use the database container, run
+
+    cd mysql
+    docker-compose up
+
+To use a local database, update the database settings at `api/settings.py`
+    
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'database_name',
+        'USER': 'user',
+        'PASSWORD': 'password',
+        'HOST': '0.0.0.0',
+        'PORT': '3306',
+    }
+}
+
 ## Setup
     virtualenv venv
     . venv/bin/active
     pip install -r requirements.txt
+    
+    ./mange.py migrate
 
 ## Test
     ./manage.py test
@@ -13,7 +39,11 @@
     ./manage.py runserver
     
     
-# API
+# API Usage
+
+All methods related to invoices require token authentication. So first you need to register a new user
+
+And then use the access token to make requests
 
 ## Registration
     [POST] /api/auth/registration/
@@ -77,12 +107,12 @@ Order params:
    
 Default: `ASC`, use `-` to `DESC`
 
-    http://127.0.0.1:8000/api/invoices/?order_by=document
+     [GET] /api/invoices/?order_by=document
     
 Will result: `ORDER BY document ASC`    
 and    
     
-    http://127.0.0.1:8000/api/invoices/?order_by=-document
+     [GET] /api/invoices/?order_by=-document
     
     ORDER BY document DESC
     
@@ -106,3 +136,21 @@ Body:
         'amount':999.99
         'document':'document'
     }
+    
+
+## Delete | Deactivation
+    [DELETE] /api/invoices/<:id>
+Response:
+
+    {
+        'reference_month':10
+        'reference_year':2020
+        'description':'description'
+        'amount':999.99
+        'document':'document'
+        'is_active': False,
+        'created_at': 'creation date',
+        'deactive_at': 'decativation date'
+    }
+    
+The invoice will not be deleted from the database, but it will be disabled
