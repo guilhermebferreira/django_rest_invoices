@@ -1,6 +1,8 @@
 # from django.test import TestCase
 import unittest
+import mock
 
+from rest_framework.authtoken.admin import User
 from rest_framework.test import APIClient
 
 
@@ -8,17 +10,23 @@ def mock_test(*args, **kwargs):
     return 200
 
 
+def mock_create_invoice(self, data):
+    data['id'] = 10
+    return data, True
+
+
 class InvoicesTestCase(unittest.TestCase):
 
     def setUp(self):
+        user = User(username='test', email='user@test.com', password='test@testUser')
         self.client = APIClient()
+        self.client.force_authenticate(user=user)
 
-    # @mock.patch('invoices.models.Invoice.get_test', mock_test)
     def test_get(self):
         response = self.client.get('/api/invoices/')
         self.assertEqual(response.status_code, 200)
 
-
+    @mock.patch('invoices.repository.InvoiceRepository.create', mock_create_invoice)
     def test_create(self):
         good_data = {
             "reference_month": 6,
@@ -29,10 +37,8 @@ class InvoicesTestCase(unittest.TestCase):
             "is_active": True
         }
 
-
         response = self.client.post('/api/invoices/', data=good_data)
         self.assertEqual(response.status_code, 201)
-
 
         good_data = {
             "reference_month": 6,
@@ -48,6 +54,7 @@ class InvoicesTestCase(unittest.TestCase):
         self.assertTrue('is_active' in response.data)
 
 
+    @mock.patch('invoices.repository.InvoiceRepository.create', mock_create_invoice)
     def test_create_invalid_data(self):
         bad_data_invalid_month = {
             "reference_month": 16,
@@ -73,7 +80,6 @@ class InvoicesTestCase(unittest.TestCase):
         response = self.client.post('/api/invoices/', data=bad_data_invalid_year)
         self.assertEqual(response.status_code, 400)
 
-
         bad_data_invalid_description_len = {
             "reference_month": 6,
             "reference_year": 1,
@@ -85,7 +91,6 @@ class InvoicesTestCase(unittest.TestCase):
 
         response = self.client.post('/api/invoices/', data=bad_data_invalid_description_len)
         self.assertEqual(response.status_code, 400)
-
 
         bad_data_invalid_document_len = {
             "reference_month": 6,
@@ -99,7 +104,6 @@ class InvoicesTestCase(unittest.TestCase):
         response = self.client.post('/api/invoices/', data=bad_data_invalid_document_len)
         self.assertEqual(response.status_code, 400)
 
-
         bad_data_invalid_amount_len = {
             "reference_month": 6,
             "reference_year": 1,
@@ -112,7 +116,6 @@ class InvoicesTestCase(unittest.TestCase):
         response = self.client.post('/api/invoices/', data=bad_data_invalid_amount_len)
         self.assertEqual(response.status_code, 400)
 
-
         bad_data_invalid_amount_decimal_len = {
             "reference_month": 6,
             "reference_year": 1,
@@ -124,4 +127,3 @@ class InvoicesTestCase(unittest.TestCase):
 
         response = self.client.post('/api/invoices/', data=bad_data_invalid_amount_decimal_len)
         self.assertEqual(response.status_code, 400)
-
