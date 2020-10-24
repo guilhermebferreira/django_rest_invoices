@@ -1,14 +1,50 @@
 import unittest
 import mock
+from rest_framework.response import Response
 
 from rest_framework.authtoken.admin import User
 from rest_framework.test import APIClient
-
+from datetime import datetime
 
 def mock_create_invoice(self, data):
     data['id'] = 10
     return data, True
 
+def mock_get_items(self,request, format=None):
+    list = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": 2,
+                "reference_month": 6,
+                "reference_year": 1999,
+                "document": "text test eeee",
+                "description": "test ggg ttttttttttttt",
+                "amount": "8989121888882.99",
+                "is_active": True,
+                "created_at": "2020-10-24T02:58:15Z",
+                "deactive_at": None
+            }
+        ]
+    }
+    return Response(list, 200)
+
+
+def mock_deactivate(self, pk):
+    item = {
+                "id": pk,
+                "reference_month": 6,
+                "reference_year": 1999,
+                "document": "text test eeee",
+                "description": "test ggg ttttttttttttt",
+                "amount": "8989121888882.99",
+                "is_active": False,
+                "created_at": "2020-10-24T02:58:15Z",
+                "deactive_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
+    return item, True
 
 class InvoicesTestCase(unittest.TestCase):
     fixtures = ["invoices/fixtures/invoices.json"]
@@ -18,10 +54,22 @@ class InvoicesTestCase(unittest.TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=user)
 
+
+
+    @mock.patch('invoices.views.InvoicesView.get', mock_get_items)
     def test_get(self):
         response = self.client.get('/api/invoices/')
         self.assertEqual(response.status_code, 200)
 
+
+
+    @mock.patch('invoices.repository.InvoiceRepository.deactivate', mock_deactivate)
+    def test_delete(self):
+        pk = 2
+        response = self.client.delete('/api/invoices/'+str(pk))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(response.data['is_active'])
 
 
     @mock.patch('invoices.repository.InvoiceRepository.create', mock_create_invoice)
